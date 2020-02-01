@@ -55,14 +55,8 @@ class MQTT(threading.Thread, MyLog):
                     self.shutter.stop(shutterId)
                 if int(msg) == 0:
                     self.shutter.lower(shutterId)
-                elif int(msg) == 100:
+                elif int(msg) == 1:
                     self.shutter.rise(shutterId)
-                elif (int(msg) > 0) and (int(msg) < 100):
-                    currentState = self.shutter.getState(shutterId)
-                    if int(msg) > currentState:
-                        self.shutter.rise(shutterId) #risePartial was removed from original operateGarage.
-                    elif int(msg) < currentState:   
-                        self.shutter.lower(shutterId) #lowerPartial was removed from original operateGarage.
             else:
                 self.LogError("received unkown message: "+topic+", message: "+msg)
     
@@ -72,7 +66,7 @@ class MQTT(threading.Thread, MyLog):
         self.LogInfo("finishing receiveMessageFromMQTT")
 
     def sendMQTT(self, topic, msg):
-        self.LogInfo("sending message to MQTT: " + topic + " = " + msg)
+        self.LogDebug("sending message to MQTT: " + topic + " = " + msg)
         self.t.publish(topic,msg,retain=True)
         
     def sendStartupInfo(self):
@@ -80,7 +74,7 @@ class MQTT(threading.Thread, MyLog):
             # cover with set position:
             # self.sendMQTT("homeassistant/cover/"+shutterId+"/config", '{"name": "'+shutter+'", "command_topic": "garage/'+shutterId+'/level/cmd", "position_topic": "garage/'+shutterId+'/level/set_state", "set_position_topic": "garage/'+shutterId+'/level/cmd", "payload_open": "100", "payload_close": "0", "state_open": "100", "state_closed": "0"}')
             # cover without position topic but with state topic:
-            self.sendMQTT("homeassistant/cover/"+shutterId+"/config", '{"name": "'+shutter+'", "command_topic": "garage/'+shutterId+'/level/cmd", "state_topic": "garage/'+shutterId+'/level/set_state", "payload_open": "100", "payload_close": "0", "state_open": "100", "state_closed": "0"}')
+            self.sendMQTT("homeassistant/cover/"+shutterId+"/config", '{"name": "'+shutter+'", "command_topic": "garage/'+shutterId+'/level/cmd", "state_topic": "garage/'+shutterId+'/level/set_state", "payload_open": "1", "payload_close": "0", "state_open": "1", "state_closed": "0"}')
             # cover without state/position (will always have working buttons)
             # self.sendMQTT("homeassistant/cover/"+shutterId+"/config", '{"name": "'+shutter+'", "command_topic": "garage/'+shutterId+'/level/cmd", "state_topic": "garage/'+shutterId+'/level/set_state", "payload_open": "100", "payload_close": "0"}')
 

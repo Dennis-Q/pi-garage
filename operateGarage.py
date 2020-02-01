@@ -63,9 +63,9 @@ class Shutter(MyLog):
 
     def rise(self, shutterId):
         self.sendCommand(shutterId, "up")
-        self.shutterState[shutterId] = 100
+        self.shutterState[shutterId] = 1
         for function in self.callback:
-            function(shutterId, 100)
+            function(shutterId, 1)
 
     # not used for garage ?
     def stop(self, shutterId):
@@ -74,10 +74,36 @@ class Shutter(MyLog):
     def registerCallBack(self, callbackFunction):
         self.callback.append(callbackFunction)
 
-    def getState(self, shutterId):
-        if shutterId not in self.shutterState:
-            self.shutterState[shutterId] = 0
+    def getState(self, shutterId, pi = None):
+        
+        if pi == None:
+            pi = pigpio.pi() # connect to Pi
+            pi.set_mode(self.CLOSEDGPIO, pigpio.INPUT)
+            pi.set_pull_up_down(self.CLOSEDGPIO, pigpio.PUD_UP)
+
+            if not pi.connected:
+                exit()
+            
+            # self.LogInfo("closed gpio:")
+            self.shutterState[shutterId] = pi.read(self.CLOSEDGPIO)
+            pi.stop()
+        else:
+            self.shutterState[shutterId] = pi.read(self.CLOSEDGPIO)
         return self.shutterState[shutterId]
+
+    # def getState(self, shutterId):
+        # if shutterId not in self.shutterState:
+            # self.shutterState[shutterId] = 0
+        # return self.shutterState[shutterId]
+
+
+
+
+
+
+
+
+
 
     def sendCommand(self, shutterId, button): #Sending a command
        self.LogDebug("sendCommand: Waiting for Lock")
@@ -85,6 +111,7 @@ class Shutter(MyLog):
        try:
            self.LogDebug("sendCommand: Lock aquired")
                 
+        #    pi = pigpio.pi() # connect to Pi
            pi = pigpio.pi() # connect to Pi
         
            if not pi.connected:
@@ -102,15 +129,15 @@ class Shutter(MyLog):
               pi.write(self.UPGPIO, 1)
 
 
-#           pi.set_mode(self.CLOSEDGPIO, pigpio.INPUT)
-#           pi.set_pull_up_down(self.CLOSEDGPIO, pigpio.PUD_UP)
-#           self.LogInfo("25 gpio:")
-#           pi.set_mode(25, pigpio.INPUT)
-#           pi.set_pull_up_down(25, pigpio.PUD_DOWN)
-#           self.LogInfo(str(pi.read(25)))
-#           pi.set_pull_up_down(25, pigpio.PUD_UP)
-#           self.LogInfo(str(pi.read(25)))
-#
+        #    pi.set_mode(self.CLOSEDGPIO, pigpio.INPUT)
+        #    pi.set_pull_up_down(self.CLOSEDGPIO, pigpio.PUD_UP)
+        #    self.LogInfo("25 gpio:")
+        #    pi.set_mode(25, pigpio.INPUT)
+        # #    pi.set_pull_up_down(25, pigpio.PUD_DOWN)
+        #    self.LogInfo(str(pi.read(25)))
+        #    pi.set_pull_up_down(25, pigpio.PUD_UP)
+        #    self.LogInfo(str(pi.read(25)))
+
 #           self.LogInfo("24 gpio:")
 #           pi.set_mode(24, pigpio.INPUT)
 #           pi.set_pull_up_down(24, pigpio.PUD_DOWN)
@@ -118,19 +145,19 @@ class Shutter(MyLog):
 #           pi.set_pull_up_down(24, pigpio.PUD_UP)
 #           self.LogInfo(str(pi.read(24)))
 
-#           self.LogInfo("closed gpio:")
-#           pi.set_mode(self.CLOSEDGPIO, pigpio.INPUT)
-#           pi.set_pull_up_down(self.CLOSEDGPIO, pigpio.PUD_DOWN)
-#           self.LogInfo(str(pi.read(self.CLOSEDGPIO)))
-#           pi.set_pull_up_down(self.CLOSEDGPIO, pigpio.PUD_UP)
-#           self.LogInfo(str(pi.read(self.CLOSEDGPIO)))
-
-#           self.LogInfo("moving gpio:")
-#           pi.set_mode(self.MOVINGGPIO, pigpio.INPUT)
-#           pi.set_pull_up_down(self.MOVINGGPIO, pigpio.PUD_DOWN)
-#           self.LogInfo(str(pi.read(self.MOVINGGPIO)))
-#           pi.set_pull_up_down(self.MOVINGGPIO, pigpio.PUD_UP)
-#           self.LogInfo(str(pi.read(self.MOVINGGPIO)))
+        #    self.LogInfo("closed gpio:")
+        #    pi.set_mode(self.CLOSEDGPIO, pigpio.INPUT)
+        #    pi.set_pull_up_down(self.CLOSEDGPIO, pigpio.PUD_DOWN)
+        #    self.LogInfo(str(pi.read(self.CLOSEDGPIO)))
+        #    pi.set_pull_up_down(self.CLOSEDGPIO, pigpio.PUD_UP)
+        #    self.LogInfo(str(pi.read(self.CLOSEDGPIO)))
+ 
+        #    self.LogInfo("moving gpio:")
+        #    pi.set_mode(self.MOVINGGPIO, pigpio.INPUT)
+        #    pi.set_pull_up_down(self.MOVINGGPIO, pigpio.PUD_DOWN)
+        #    self.LogInfo(str(pi.read(self.MOVINGGPIO)))
+        #    pi.set_pull_up_down(self.MOVINGGPIO, pigpio.PUD_UP)
+        #    self.LogInfo(str(pi.read(self.MOVINGGPIO)))
 #           self.LogInfo("GPIO status door closed: " + str(pi.read(self.CLOSEDGPIO)))
 #           self.LogInfo("GPIO status door moving: " + str(pi.read(self.MOVINGGPIO)))
         
@@ -276,10 +303,10 @@ class operateGarage(MyLog):
     #        self.mqtt.setDaemon(True)
     #        self.mqtt.start()
 
-       if (args.mqtt == True):
-           self.mqtt.join()
+    #    if (args.mqtt == True):
+        #    self.mqtt.join()
        self.LogInfo ("Process Command Completed....")      
-       self.Close()
+       #self.Close()
     
     #---------------------operateGarage::Close----------------------------------------
     def Close(self, signum = None, frame = None):
@@ -317,10 +344,28 @@ if __name__ == '__main__':
     
     #Start things up
     MyShutter = operateGarage(args = args)
+    # MyShutter.test = 0
+
+
+
 
     try:
+        pi = pigpio.pi() # connect to Pi
+        if not pi.connected:
+            exit()
+        pi.set_mode(MyShutter.config.CLOSEDGPIO, pigpio.INPUT)
+        pi.set_pull_up_down(MyShutter.config.CLOSEDGPIO, pigpio.PUD_UP)
+
         while not MyShutter.ProgramComplete:
-            time.sleep(0.01)
+            time.sleep(5)
+            
+            for shutter, shutterId in sorted(MyShutter.config.ShuttersByName.items(), key=lambda kv: kv[1]):
+                MyShutter.shutter.getState(shutterId, pi = pi)
+                # MyShutter.shutter.getState(shutterId)
+                # MyShutter.LogInfo("TEST Received request to set Shutter " + shutter + " to level " + str(MyShutter.shutter.shutterState[shutterId]) + " at MQTT")
+                MyShutter.mqtt.sendMQTT("garage/"+shutterId+"/level/set_state", str(MyShutter.shutter.shutterState[shutterId])) 
+                # MyShutter.test += 1
+        MyShutter.Close()
         sys.exit(0)
     except:
         sys.exit(1)

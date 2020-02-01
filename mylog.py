@@ -3,7 +3,8 @@ import os, sys, time, json
 import logging, logging.handlers
 
 #---------- SetupLogger --------------------------------------------------------
-def SetupLogger(logger_name, log_file, level=logging.DEBUG, stream = False):
+#def SetupLogger(logger_name, log_file, level=logging.DEBUG, stream = False):
+def SetupLogger(logger_name, log_file, level=logging.INFO, stream = False):
 
 
     logger = logging.getLogger(logger_name)
