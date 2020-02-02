@@ -57,13 +57,13 @@ class Shutter(MyLog):
 
     def lower(self, shutterId):
         self.sendCommand(shutterId, "down")
-        self.shutterState[shutterId] = 0
+        #self.shutterState[shutterId] = 0
         for function in self.callback:
             function(shutterId, 0)
 
     def rise(self, shutterId):
         self.sendCommand(shutterId, "up")
-        self.shutterState[shutterId] = 1
+        #self.shutterState[shutterId] = 1
         for function in self.callback:
             function(shutterId, 1)
 
